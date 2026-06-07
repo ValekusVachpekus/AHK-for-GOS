@@ -1,0 +1,24 @@
+# Личная конфигурация игрока (ник, путь, ФИО/звание)
+config.ini
+CLAUDE.md
+
+# Артефакты компиляции AHK
+*.exe
+Compiler/
+*.bin
+
+# Логи и временные файлы игры
+chatlog.txt
+*.log
+*.tmp
+*.bak
+
+# Системное
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Редакторы
+.vscode/
+.idea/
+*~
