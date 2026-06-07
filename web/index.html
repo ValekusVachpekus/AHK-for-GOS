@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Конфигурация AHK-for-GOS</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: #1e1f22; color: #e6e6e6;
+    font: 15px/1.4 "Segoe UI", system-ui, sans-serif;
+  }
+  .card {
+    width: 560px; max-width: 92vw; background: #2b2d31; border: 1px solid #3a3c41;
+    border-radius: 12px; padding: 28px 32px; box-shadow: 0 8px 30px rgba(0,0,0,.4);
+  }
+  h1 { margin: 0 0 22px; font-size: 20px; font-weight: 600; }
+  label { display: block; margin: 14px 0 6px; font-size: 13px; color: #b9bbbe; }
+  input, select {
+    width: 100%; padding: 9px 11px; border-radius: 7px; border: 1px solid #44464c;
+    background: #1e1f22; color: #e6e6e6; font: inherit; outline: none;
+  }
+  input:focus, select:focus { border-color: #5865f2; }
+  .row { display: flex; gap: 8px; }
+  .row input { flex: 1; }
+  button {
+    border: none; border-radius: 7px; padding: 9px 16px; font: inherit; cursor: pointer;
+    background: #3a3c41; color: #e6e6e6;
+  }
+  button:hover { background: #44464c; }
+  .primary { background: #5865f2; color: #fff; }
+  .primary:hover { background: #4752c4; }
+  .actions { display: flex; gap: 10px; margin-top: 26px; }
+  .actions .primary { flex: 1; }
+  #msg { margin-top: 16px; min-height: 20px; font-size: 13px; }
+  #msg.ok { color: #57d977; }
+  #msg.err { color: #f06b6b; }
+  .hint { font-size: 11px; color: #80848e; margin-top: 4px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Конфигурация AHK-for-GOS</h1>
+
+    <label>Путь до папки с игрой</label>
+    <div class="row">
+      <input id="folder" type="text" placeholder="C:\Amazing Games\Amazing Online\PC">
+      <button type="button" id="browse">Выбрать папку</button>
+    </div>
+    <div class="hint">К пути автоматически добавится <code>\amazing\chatlog.txt</code></div>
+
+    <label>Никнейм в игре</label>
+    <input id="CRMP_USER_NICKNAME" type="text" placeholder="Vladislav_Shetkov">
+
+    <label>Фамилия / Позывной</label>
+    <input id="poz" type="text">
+
+    <label>Должность</label>
+    <input id="dolz" type="text">
+
+    <label>Звание</label>
+    <input id="zvan" type="text">
+
+    <label>Организация</label>
+    <select id="goska">
+      <option>УМВД</option>
+      <option>ГАИ</option>
+      <option>УФСИН</option>
+      <option value="другое">другое…</option>
+    </select>
+    <input id="goska_custom" class="hidden" type="text" placeholder="Введите название организации" style="margin-top:8px">
+
+    <div class="actions">
+      <button type="button" class="primary" id="save">Сохранить</button>
+      <button type="button" id="cancel">Отмена</button>
+    </div>
+    <div id="msg"></div>
+  </div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const PRESET = ["УМВД", "ГАИ", "УФСИН"];
+
+function setGoska(value) {
+  if (PRESET.includes(value)) {
+    $("goska").value = value;
+    $("goska_custom").classList.add("hidden");
+    $("goska_custom").value = "";
+  } else {
+    $("goska").value = "другое";
+    $("goska_custom").classList.remove("hidden");
+    $("goska_custom").value = value || "";
+  }
+}
+
+$("goska").addEventListener("change", () => {
+  $("goska_custom").classList.toggle("hidden", $("goska").value !== "другое");
+});
+
+$("browse").addEventListener("click", async () => {
+  try {
+    const r = await fetch("/pick-folder", { method: "POST" });
+    const d = await r.json();
+    if (d.folder) $("folder").value = d.folder;
+  } catch (e) {
+    showMsg("Не удалось открыть диалог выбора папки", true);
+  }
+});
+
+$("cancel").addEventListener("click", () => {
+  showMsg("Окно можно закрыть.", false);
+});
+
+$("save").addEventListener("click", async () => {
+  let goska = $("goska").value;
+  if (goska === "другое") {
+    goska = $("goska_custom").value.trim();
+    if (!goska) { showMsg("Введите название организации.", true); return; }
+  }
+  const payload = {
+    folder: $("folder").value.trim(),
+    CRMP_USER_NICKNAME: $("CRMP_USER_NICKNAME").value.trim(),
+    poz: $("poz").value.trim(),
+    dolz: $("dolz").value.trim(),
+    zvan: $("zvan").value.trim(),
+    goska: goska,
+  };
+  try {
+    const r = await fetch("/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    if (d.ok) showMsg("Сохранено ✓  way = " + d.way, false);
+    else showMsg("Ошибка: " + (d.error || "не сохранено"), true);
+  } catch (e) {
+    showMsg("Ошибка сети: " + e, true);
+  }
+});
+
+function showMsg(text, isError) {
+  const m = $("msg");
+  m.textContent = text;
+  m.className = isError ? "err" : "ok";
+}
+
+async function load() {
+  try {
+    const r = await fetch("/config");
+    const d = await r.json();
+    $("folder").value = d.folder || "";
+    $("CRMP_USER_NICKNAME").value = d.CRMP_USER_NICKNAME || "";
+    $("poz").value = d.poz || "";
+    $("dolz").value = d.dolz || "";
+    $("zvan").value = d.zvan || "";
+    setGoska(d.goska || "ГАИ");
+  } catch (e) {
+    showMsg("Не удалось загрузить config.ini", true);
+  }
+}
+load();
+</script>
+</body>
+</html>
