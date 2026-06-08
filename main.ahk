@@ -53,6 +53,16 @@ global flvu1 := False, flvu2 := False, flvu3 := False
 global flfp1 := False, flfp2 := False, flfp3 := False
 global State4 := False         // состояние быстрого меню (!X)
 
+// Хендлы процесса игры и буферы инъекции (UDF/common.ahk).
+// ВАЖНО: объявлять super-global ИМЕННО ЗДЕСЬ (auto-execute секция). Если оставить
+// эти global только в common.ahk (подключается ниже, после return) — они НЕ станут
+// super-global, и checkHandles() будет всегда возвращать false → чат/инъекция мертвы.
+global hGTA := 0x0, dwGTAPID := 0x0, dwSAMP := 0x0, pMemory := 0x0
+global pParam1 := 0x0, pParam2 := 0x0, pParam3 := 0x0, pParam4 := 0x0, pParam5 := 0x0
+global pInjectFunc := 0x0, iRefreshHandles := 0
+global GAME_MP_ModuleName := "azmp.dll"   // имя модуля мультиплеера
+global GAME_PID := "AMAZING ONLINE"       // заголовок окна игры (для WinGet PID)
+
 // ---------------------------------------------------------------------------
 //  Инициализация
 // ---------------------------------------------------------------------------

@@ -1,19 +1,9 @@
 ﻿#CommentFlag //
 
-global hGTA := 0x0
-global dwGTAPID := 0x0
-global dwSAMP := 0x0
-global pMemory := 0x0
-global pParam1 := 0x0
-global pParam2 := 0x0
-global pParam3 := 0x0
-global pParam4 := 0x0
-global pParam5 := 0x0
-global pInjectFunc := 0x0
-global iRefreshHandles := 0
-
-global GAME_MP_ModuleName := "azmp.dll" // Название модуля мультиплеера
-global GAME_PID := "AMAZING ONLINE" // Заголовок окна игры
+// hGTA/dwSAMP/pMemory/pParam*/pInjectFunc/iRefreshHandles/GAME_MP_ModuleName/GAME_PID
+// объявлены super-global в main.ahk (auto-execute секция). Здесь НЕ объявлять —
+// иначе они окажутся вне auto-execute (этот файл подключается после return) и
+// перестанут быть super-global → checkHandles() всегда false.
 
 
 waitForSingleObject(hThread, dwMilliseconds) {
